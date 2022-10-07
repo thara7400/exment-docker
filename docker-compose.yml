@@ -1,4 +1,7 @@
 version: '3'
+volumes:
+  www-data:
+  mysql-data:
 services:
   web:
     image: nginx:latest
@@ -10,29 +13,36 @@ services:
     env_file: .env
     depends_on:
       - php
-    networks:
-      - exment-network
     environment:
       - VIRTUAL_HOST=${EXMENT_DOCKER_FRONT_DOMAIN-localhost}
-
   php:
     build: 
       context: ./php
       args:
         - LARAVEL_VERSION=${EXMENT_DOCKER_LARAVEL_VERSION-5.6.*}
         - EXMENT_VERSION=${EXMENT_DOCKER_EXMENT_VERSION-*}
-
     volumes:
       - www-data:/var/www/exment
       - ./php/volumes/php.ini:/usr/local/etc/php/php.ini
       - ./php/volumes/logs:/var/www/exment/storage/logs
       - ./php/volumes/.env:/var/www/exment/.env
     env_file: .env
-    networks:
-      - exment-network
-
-volumes:
-  www-data:
-  
-networks:
-  exment-network:
+  mysql:
+    image: mysql:5.7
+    ports:
+      - ${EXMENT_DOCKER_MYSQL_PORT-3306}:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+    env_file: .env
+    environment:
+      MYSQL_DATABASE: ${EXMENT_DOCKER_MYSQL_DATABASE-exment_database}
+      MYSQL_ROOT_PASSWORD: ${EXMENT_DOCKER_MYSQL_ROOT_PASSWORD-secret}
+      MYSQL_USER: ${EXMENT_DOCKER_MYSQL_USER-exment_user}
+      MYSQL_PASSWORD: ${EXMENT_DOCKER_MYSQL_PASSWORD-secret}
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    env_file: .env
+    ports:
+      - ${EXMENT_DOCKER_PHPMYADMIN_PORT-8888}:80
+    environment:
+      - PMA_ARBITRARY=1
