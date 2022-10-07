@@ -1,48 +1,52 @@
 version: '3'
 volumes:
-  www-data:
-  mysql-data:
+    www-data:
+    mysql-data:
 services:
-  web:
-    image: nginx:latest
-    ports:
-      - ${EXMENT_DOCKER_HTTP_PORTS-80}:80
-    volumes:
-      - ./compose/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - www-data:/var/www/exment
-    env_file: .env
-    depends_on:
-      - php
-    environment:
-      - VIRTUAL_HOST=${EXMENT_DOCKER_FRONT_DOMAIN-localhost}
-  php:
-    build: 
-      context: ./compose/php
-      args:
-        - LARAVEL_VERSION=${EXMENT_DOCKER_LARAVEL_VERSION-5.6.*}
-        - EXMENT_VERSION=${EXMENT_DOCKER_EXMENT_VERSION-*}
-    volumes:
-      - www-data:/var/www/exment
-      - ./compose/php/php.ini:/usr/local/etc/php/php.ini
-      - ./compose/php/logs:/var/www/exment/storage/logs
-      - ./compose/php/.env:/var/www/exment/.env
-    env_file: .env
-  mysql:
-    image: mysql:5.7
-    ports:
-      - ${EXMENT_DOCKER_MYSQL_PORT-3306}:3306
-    volumes:
-      - mysql-data:/var/lib/mysql
-    env_file: .env
-    environment:
-      MYSQL_DATABASE: ${EXMENT_DOCKER_MYSQL_DATABASE-exment_database}
-      MYSQL_ROOT_PASSWORD: ${EXMENT_DOCKER_MYSQL_ROOT_PASSWORD-secret}
-      MYSQL_USER: ${EXMENT_DOCKER_MYSQL_USER-exment_user}
-      MYSQL_PASSWORD: ${EXMENT_DOCKER_MYSQL_PASSWORD-secret}
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    env_file: .env
-    ports:
-      - ${EXMENT_DOCKER_PHPMYADMIN_PORT-8888}:80
-    environment:
-      - PMA_ARBITRARY=1
+    nginx:
+        container_name: exment-nginx
+        image: nginx:latest
+        ports:
+            - ${EXMENT_DOCKER_HTTP_PORTS-80}:80
+        volumes:
+            - ./compose/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+            - www-data:/var/www/exment
+        env_file: .env
+        depends_on:
+            - php
+        environment:
+            - VIRTUAL_HOST=${EXMENT_DOCKER_FRONT_DOMAIN-localhost}
+    php:
+        container_name: exment-php
+        build:
+            context: ./compose/php
+            args:
+                - LARAVEL_VERSION=${EXMENT_DOCKER_LARAVEL_VERSION-5.6.*}
+                - EXMENT_VERSION=${EXMENT_DOCKER_EXMENT_VERSION-*}
+        volumes:
+            - www-data:/var/www/exment
+            - ./compose/php/php.ini:/usr/local/etc/php/php.ini
+            - ./compose/php/logs:/var/www/exment/storage/logs
+            - ./compose/php/.env:/var/www/exment/.env
+        env_file: .env
+    mysql:
+        container_name: exment-mysql
+        image: mysql:5.7
+        ports:
+            - ${EXMENT_DOCKER_MYSQL_PORT-3306}:3306
+        volumes:
+            - mysql-data:/var/lib/mysql
+        env_file: .env
+        environment:
+            MYSQL_DATABASE: ${EXMENT_DOCKER_MYSQL_DATABASE-exment_database}
+            MYSQL_ROOT_PASSWORD: ${EXMENT_DOCKER_MYSQL_ROOT_PASSWORD-secret}
+            MYSQL_USER: ${EXMENT_DOCKER_MYSQL_USER-exment_user}
+            MYSQL_PASSWORD: ${EXMENT_DOCKER_MYSQL_PASSWORD-secret}
+    phpmyadmin:
+        container_name: exment-phpmyadmin
+        image: phpmyadmin/phpmyadmin:latest
+        env_file: .env
+        ports:
+            - ${EXMENT_DOCKER_PHPMYADMIN_PORT-8888}:80
+        environment:
+            - PMA_ARBITRARY=1
